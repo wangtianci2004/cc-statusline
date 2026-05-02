@@ -300,6 +300,17 @@ day_total=$(jq '[.[]] | add // 0' "$day_file")
 # 清理 3 天前的旧文件
 find "$HOME/.claude" -maxdepth 1 -name '.cost-day-*.json' -mtime +3 -delete 2>/dev/null
 
+# 本月累计花费：~/.claude/.cost-month-YYYY-MM.json {YYYY-MM-DD: day_total}
+# 每次刷新把当日 day_total 写入当月文件对应日期 key，月度合计即所有 key 之和。
+month=$(date +%Y-%m)
+month_file="$HOME/.claude/.cost-month-${month}.json"
+[ -f "$month_file" ] || echo "{}" > "$month_file"
+jq --arg d "$day" --argjson c "$day_total" \
+  '. + {($d): $c}' "$month_file" > "${month_file}.tmp" && mv "${month_file}.tmp" "$month_file"
+month_total=$(jq '[.[]] | add // 0' "$month_file")
+# 清理 70 天前的月度文件（保留上月便于跨月初对账）
+find "$HOME/.claude" -maxdepth 1 -name '.cost-month-*.json' -mtime +70 -delete 2>/dev/null
+
 # 速率限制：5h/7d 已用百分比 + 5h 重置时间
 rl_tag=""
 if [ "$rl5_pct" -gt 0 ] 2>/dev/null || [ "$rl7_pct" -gt 0 ] 2>/dev/null; then
@@ -316,7 +327,7 @@ fi
 if [ "$nreq" -gt 0 ]; then
   r_label="1R"
   [ "$fr_dip" = "1" ] && r_label="∧R"
-  echo "${GRN}${model_name}${RST}${mode_tag} | ${GRN}$(fmt_path "$cwd")${RST}${branch_tag} | ${GRN}$(fmt "$used_tokens")${RST}/${pct_tag}${ttl_tag} | ${r_label}:${GRN}$(fmt "$fr")${RST}·Rq:${GRN}${nreq}${RST}·ΔW:${GRN}$(fmt "$cw")${RST}·ΣW:${GRN}$(fmt "$tw")${RST} | R${GRN}$(fmt_cost "$turn_cost")${RST}·T${GRN}$(fmt_cost "$cost_usd")${RST}·D${GRN}$(fmt_cost "$day_total")${RST}${rl_tag}"
+  echo "${GRN}${model_name}${RST}${mode_tag} | ${GRN}$(fmt_path "$cwd")${RST}${branch_tag} | ${GRN}$(fmt "$used_tokens")${RST}/${pct_tag}${ttl_tag} | ${r_label}:${GRN}$(fmt "$fr")${RST}·Rq:${GRN}${nreq}${RST}·ΔW:${GRN}$(fmt "$cw")${RST}·ΣW:${GRN}$(fmt "$tw")${RST} | R${GRN}$(fmt_cost "$turn_cost")${RST}·T${GRN}$(fmt_cost "$cost_usd")${RST}·D${GRN}$(fmt_cost "$day_total")${RST}·M${GRN}$(fmt_cost "$month_total")${RST}${rl_tag}"
 else
   echo "${GRN}${model_name}${RST}${mode_tag} | ${GRN}$(fmt_path "$cwd")${RST}${branch_tag} | ${GRN}$(fmt "$used_tokens")${RST}/${pct_tag}${rl_tag}"
 fi
