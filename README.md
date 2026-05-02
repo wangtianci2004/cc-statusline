@@ -1,16 +1,31 @@
-# Claude Code 增强状态栏
+# Claude Code Statusline
 
-一行式状态栏，聚合 Claude Code 的模型、上下文、缓存、成本与速率限制信息。
+一行式状态栏插件，聚合 Claude Code 的模型、上下文、缓存、成本与速率限制信息。
 
 ## 显示样例
 
 ```
-Opus 4.7 | ~/d/c/proj main'+2↑1 | 135.2k/14% | 1R:0·Rq:4·ΔW:1.8k·ΣW:135.6k | R$1.17·T$3.62·D$3.80 | 5H:85%(16:30)·7D:35%
+╭─── Claude Code v2.1.118 ────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                               │
+│                Welcome back Tiancy!                │ Run /init to create a CLAUDE.md file with instruction… │
+│                                                    │ ────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ Recent activity                                        │
+│                      ▝▜█████▛▘                     │ No recent activity                                     │
+│                        ▘▘ ▝▝                       │                                                        │
+│      Opus 4.7 with xhigh effort · Claude Max ·     │                                                        │
+│      xxxxxxxxxxxx@gmail.com's Organization         │                                                        │
+│              ~/project/cc-statusline               │                                                        │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ Hello ～
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Opus 4.7 | ~/cc-statusline main'+2↑1 | 35.2k/8% | 1R:0·Rq:4·ΔW:1.8k·ΣW:35.6k | R$1.17·T$3.62·D$3.80 | 5H:3%(16:30)·7D:5%
 ```
 
 > 动态值默认 ANSI 绿（`\033[32m`）；上下文 / 5H / 7D 任一百分比 ≥80% 时改为加粗红（`\033[1;31m`）。标签字符（`R`/`T`/`D`/`1R`/`Rq` 等）保持终端默认色。
 
-| 段位 | 含义 |
+| 状态 | 含义 |
 |------|------|
 | `Opus 4.7[·perm_mode]` | 当前模型；非 default 权限模式追加 |
 | `~/d/c/proj main'+2↑1↓3` | 路径缩写 + git 分支 + 工作树状态（`'` dirty / `+n` staged / `↑n` ahead / `↓n` behind） |
@@ -28,7 +43,7 @@ Opus 4.7 | ~/d/c/proj main'+2↑1 | 135.2k/14% | 1R:0·Rq:4·ΔW:1.8k·ΣW:135.6
 ## 一键安装
 
 ```sh
-cd claude-statusline
+cd cc-statusline
 sh install.sh
 ```
 
@@ -49,7 +64,7 @@ chmod u+x ~/.claude/statusline-command.sh
 {
   "statusLine": {
     "type": "command",
-    "command": "/Users/<你>/.claude/statusline-command.sh"
+    "command": "/Users/<you>/.claude/statusline-command.sh"
   }
 }
 ```
@@ -57,7 +72,7 @@ chmod u+x ~/.claude/statusline-command.sh
 ## 依赖
 
 - `jq`（必需）
-- `git`（git 段位）
+- `git`（必需）
 - `awk` / `date`（POSIX 自带）
 
 macOS 用 `brew install jq` 安装。
