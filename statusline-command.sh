@@ -290,13 +290,21 @@ else
 fi
 
 
-# 今日累计花费：~/.claude/.cost-day-YYYY-MM-DD.json {sid: latest_cost}
+# 今日累计花费：~/.claude/.cost-day-YYYY-MM-DD.json
+# {sid: {base, current}}，当日贡献 = current - base
+# base 锚定该 sid 今日首次刷新时的 cost_usd，避免跨天会话把昨日累计重复计入今日。
 day=$(date +%Y-%m-%d)
 day_file="$HOME/.claude/.cost-day-${day}.json"
 [ -f "$day_file" ] || echo "{}" > "$day_file"
-jq --arg sid "$session_id" --argjson c "$cost_usd" \
-  '. + {($sid): $c}' "$day_file" > "${day_file}.tmp" && mv "${day_file}.tmp" "$day_file"
-day_total=$(jq '[.[]] | add // 0' "$day_file")
+jq --arg sid "$session_id" --argjson c "$cost_usd" '
+  # 旧 schema (sid -> number) 迁移为 {base:0, current:旧值}
+  to_entries | map(
+    if (.value | type) == "number" then .value = {base: 0, current: .value} else . end
+  ) | from_entries
+  | if has($sid) then .[$sid].current = $c
+    else .[$sid] = {base: $c, current: $c} end
+' "$day_file" > "${day_file}.tmp" && mv "${day_file}.tmp" "$day_file"
+day_total=$(jq '[.[] | (.current // 0) - (.base // 0)] | add // 0' "$day_file")
 # 清理 3 天前的旧文件
 find "$HOME/.claude" -maxdepth 1 -name '.cost-day-*.json' -mtime +3 -delete 2>/dev/null
 
